@@ -72,11 +72,10 @@ def handle_mqtt_message(client, userdata, message):
     # socketio.send (message.payload.decode())
 
     # Send email notifications based on MQTT messages
-    if data['payload'] in ['intruder', 'incident', 'visitor']:
-        with smtplib.SMTP_SSL(smtp_server, port, context=context) as server:
-            server.login(sender_email, password)
-            server.sendmail(sender_email, receiver_email, data['payload'])
-            print('done')
+    with smtplib.SMTP_SSL(smtp_server, port, context=context) as server:
+        server.login(sender_email, password)
+        server.sendmail(sender_email, receiver_email, data['payload'])
+        print('done')
 
 def send_email_notification(event):
     message = MIMEText(f'This is the body of the email for {event}')
