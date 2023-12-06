@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Doorbell App</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js" integrity="sha512-q/dWJ3kcmjBLU4Qc47E4A9kTB4m3wuTY7vkFJDTZKjTs8jhyGQnaUrxa0Ytd0ssMZhbNua9hE+E7Qv1j+DyZwA==" crossorigin="anonymous"></script>
+    <script>
+        var socket = io('http://20.187.121.122:5000/');
+        socket.on('connect', function() {
+            socket.emit('test_message', {data: 'I\'m connected!'});
+            console.log("connected");
+        });
+
+        socket.on('mqtt_message', function (data) {
+            console.log("msg");
+            var messageDiv = document.createElement('div');
+            var timestamp = new Date().toLocaleString();
+            messageDiv.textContent = timestamp + ' - ' + data.payload + 'DETECTED';
+            document.getElementById('messages').appendChild(messageDiv);
+
+            // Display a popup notification upon receiving a reading
+            showPopup('ALERT from doorbell: ' + data.payload + 'DETECTED!');
+        });
+
+        function sendLockInstruction(msg) {
+            fetch('/publish', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ command: 'lockCommand', msg: msg })
+            }).then(response => {
+                console.log('Instruction sent successfully');
+            }).catch(error => {
+                console.error('Error sending instruction:', error);
+            });
+        }
+
+        function sendUnlockInstruction(msg) {
+            fetch('/publish', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ command: 'unlockCommand', msg: msg })
+            }).then(response => {
+                console.log('Instruction sent successfully');
+            }).catch(error => {
+                console.error('Error sending instruction:', error);
+            });
+        }
+
+        function sendBellInstruction(msg) {
+            fetch('/publish', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ command: 'bellCommand', msg: msg })
+            }).then(response => {
+                console.log('Instruction sent successfully');
+            }).catch(error => {
+                console.error('Error sending instruction:', error);
+            });
+        }
+
+        function showPopup(title, message) {
+            document.getElementById('popupMessage').innerHTML = '<strong>' + title + '</strong><br>' + message;
+            document.getElementById('popup').style.display = 'block';
+        }
+
+        function hidePopup() {
+            document.getElementById('popup').style.display = 'none';
+        }
+    </script>
+    <style>
+        /* Add your CSS styles here */
+        .popup {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #ffffff;
+            border: 1px solid #cccccc;
+            padding: 20px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            z-index: 9999;
+        }
+    </style>
+</head>
+<body>
+    <div id="messages"></div>
+    <div id="popup" class="popup">
+        <p id="popupMessage"></p>
+        <button onclick="hidePopup()">Close</button>
+    </div>
+    <button onclick="sendLockInstruction('delivery')">Delivery</button>
+    <button onclick="sendLockInstruction('visitor')">Visitor</button>
+    <button onclick="sendUnlockInstruction('delivery')">Close Delivery</button>
+    <button onclick="sendUnlockInstruction('visitor')">Close Visitor</button>
+    <button onclick="sendBellInstruction('off')">offAlarm</button>
+    <p>Click <a href="https://02ba-2607-fa49-6001-a400-00-b093.ngrok-free.app/" target="_blank">here</a> to view the live stream.</p>
+
+    
+</body>
+</html>
+
